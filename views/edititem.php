@@ -27,7 +27,7 @@ $contents = <<<EOT
 	<div class="row">
 		<div class="large-4 columns">
 			<label>Store</label>
-			<input type="text" placeholder="{$item['location']}" value="{$item['location']}" pattern="alpha_numeric" />
+			<input type="text" placeholder="{$item['where']}" value="{$item['where']}" pattern="alpha_numeric" />
 		</div>
 		<div class="large-4 columns">
 			<label>Website</label>
@@ -56,7 +56,7 @@ $contents = <<<EOT
 	</div>
 
 	<div class="row">
-		<div class="large-6 columns"><a href="#" class="button expand">Save</a></div>
+		<div class="large-6 columns"><input class="success button expand" type="submit" value="Save" /></div>
 		<div class="large-6 columns"><a href="?v=mylist" class="button expand alert">Cancel</a></div>
 	</div>
 </form>

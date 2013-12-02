@@ -1,12 +1,25 @@
 <?
 
-// get the requested view, defaulting to dashboard
-$view = 'dashboard';
-if(isset($_GET['v']))
-	$view = $_GET['v'];
+// start our session and make sure we're logged in
+session_start();
+if(!isset($_SESSION['loggedIn']))
+	$_SESSION['loggedIn'] = False;
+
+// let us log out
+if(isset($_GET['v']) && $_GET['v'] == 'logout')
+{
+	$_SESSION['loggedIn'] = False;
+	$_SESSION['name'] = '';
+	$_SESSION['email'] = '';
+	$_SESSION['flags'] = array();
+}
 
 // load up our sql connection
 $db = null;
+$dbServer = "";
+$dbUser   = "";
+$dbPass   = "";
+$dbDB     = "";
 if((@include('db.php')) === FALSE)
 {
 	$errorMessage = "Failed to load database settings!";
@@ -14,10 +27,45 @@ if((@include('db.php')) === FALSE)
 }
 else
 {
-	$db = @mysqli_connect();
+	$db = @mysqli_connect($dbServer, $dbUser, $dbPass, $dbDB);
 	if(mysqli_connect_errno())
 		$view = "dberror";
 }
+
+// log in if we need to
+if($_SESSION['loggedIn'] == 0 && (!isset($_GET['a']) || $_GET['a'] != 'login'))
+{
+	require('views/login.php');
+	exit(0);
+}
+else if(isset($_GET['a']) && $_GET['a'] == 'login')
+{
+	$result = mysqli_query($db, "select * from users where lower(name)=lower('".$_POST['name']."') and password=PASSWORD('".$_POST['password']."') LIMIT 1");
+	if(mysqli_num_rows($result) < 1)
+	{
+		$loginName = $_POST['name'];
+		$loginError = "badpassword";
+		// determine if it was a correct user name
+		$result = mysqli_query($db, "select id from users where lower(name)=lower('".$_POST['name']."') LIMIT 1");
+		if(mysqli_num_rows($result) < 1)
+			$loginError = "badname";
+		require('views/login.php');
+		exit(0);
+	}
+	else
+	{
+		$_SESSION['loggedIn'] = True;
+		$arr = mysqli_fetch_array($result);
+		$_SESSION['name'] = $arr['name'];
+		$_SESSION['email'] = $arr['email'];
+		$_SESSION['flags'] = explode(',', $arr['flags']);
+	}
+}
+
+// get the requested view, defaulting to dashboard
+$view = 'dashboard';
+if(isset($_GET['v']))
+	$view = $_GET['v'];
 
 // get the current view's contents
 $title = "";
@@ -25,7 +73,8 @@ $contents = "";
 if((@include('views/' . $view . '.php')) === FALSE)
 	require('views/404.php');
 
-// todo: parse contents
+// load up our menu information
+require('menu.php');
 
 ?><!DOCTYPE html>
 <!--[if IE 9]><html class="lt-ie10" lang="en" > <![endif]-->
@@ -52,6 +101,8 @@ if((@include('views/' . $view . '.php')) === FALSE)
 		.masrony-brick-center:last-of-type { margin-bottom: -1em; }
 		#masonryContainer { width: 0 auto; }
 		.side-nav { margin-top: -1em; }
+		.selected-nav { background: #2ba6cb; }
+		.selected-nav a { color: white; }
 	</style>
 
 </head>
@@ -60,7 +111,7 @@ if((@include('views/' . $view . '.php')) === FALSE)
 	<nav class="top-bar hide-for-small-only" data-topbar>
 		<ul class="title-area">
 			<li class="name">
-				<h1><a href="?v=dashboard">ListWish</a></h1>
+				<h1><a href="?">ListWish</a></h1>
 			</li>
 		</ul>
 
@@ -72,10 +123,12 @@ if((@include('views/' . $view . '.php')) === FALSE)
 
 			<!-- Left Nav Section -->
 			<ul class="left">
-				<li<? if($view == 'dashboard') echo ' class="active"'; ?>><a href="?v=dashboard">Dashboard</a></li>
-				<li<? if($view == 'mylist') echo ' class="active"'; ?>><a href="?v=mylist">My List</a></li>
-				<li<? if($view == 'viewlists') echo ' class="active"'; ?>><a href="?v=viewlists">View Lists</a></li>
-				<li<? if($view == 'controlpanel') echo ' class="active"'; ?>><a href="?v=controlpanel">Control Panel</a></li>
+				<?
+
+					foreach($menu as $name => $slugs)
+						echo '<li' . (in_array($view, $slugs) ? ' class="active"' : '') . '><a href="?v=' . $slugs[0] . '"">' . $name . '</a></li>';
+
+				?>
 			</ul>
 		</section>
 	</nav>
@@ -83,10 +136,12 @@ if((@include('views/' . $view . '.php')) === FALSE)
 	<!-- Mobile Navigation Bar -->
 	<a href="#" data-dropdown="navdrop" class="button dropdown expand hide-for-medium-up"><? echo $title; ?></a><br>
 	<ul id="navdrop" data-dropdown-content class="f-dropdown hide-for-medium-up">
-		<li><a href="?v=dashboard">Dashboard</a></li>
-		<li><a href="?v=mylist">My List</a></li>
-		<li><a href="?v=viewlists">View Lists</a></li>
-		<li><a href="?v=controlpanel">Control Panel</a></li>
+		<?
+
+			foreach($menu as $name => $slugs)
+				echo '<li' . (in_array($view, $slugs) ? ' class="selected-nav"' : '') . '><a href="?v=' . $slugs[0] . '"">' . $name . '</a></li>';
+
+		?>
 		<li><a href="?v=logout">Log Out</a></li>
 	</ul>
 	<!-- End Mobile Navigation Bar -->
