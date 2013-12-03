@@ -6,7 +6,7 @@ $contents = <<<EOD
 <p>Please select what you would like to do from the list above. If you have any problems, please contact Kenton at 780-265-2080 or <a href="mailto:kenton@hamaluik.com">kenton@hamaluik.com</a>.</p>
 EOD;
 
-$contents .= <<<EOD
+/*$contents .= <<<EOD
 <div class="row">
 	<div class="large-4 columns">
 		<img src="http://placehold.it/400x300&text=[img]" />
@@ -26,6 +26,6 @@ $contents .= <<<EOD
 		<p>Bacon ipsum dolor sit amet nulla ham qui sint exercitation eiusmod commodo, chuck duis velit. Aute in reprehenderit, dolore aliqua non est magna in labore pig pork biltong. Eiusmod swine spare ribs reprehenderit culpa. Boudin aliqua adipisicing rump corned beef.</p>
 	</div>
 </div>
-EOD;
+EOD;*/
 
 ?>
